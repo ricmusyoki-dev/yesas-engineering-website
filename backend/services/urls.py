@@ -1,0 +1,80 @@
+from django.urls import path
+
+from .management_views import (
+    ArchiveServiceView,
+    DiscardServiceDraftView,
+    PublishServiceDraftView,
+    RestoreServiceRevisionView,
+    ServiceCategoryDetailView,
+    ServiceCategoryListView,
+    ServiceDraftView,
+    ServiceManagementDetailView,
+    ServiceManagementListView,
+    ServicePreviewView,
+    ServiceRevisionListView,
+)
+from .public_views import PublicServiceDetailView, PublicServiceListView
+
+urlpatterns = [
+    path("services/", PublicServiceListView.as_view(), name="public-services"),
+    path(
+        "services/<slug:slug>/",
+        PublicServiceDetailView.as_view(),
+        name="public-service-detail",
+    ),
+    path(
+        "manage/services/",
+        ServiceManagementListView.as_view(),
+        name="manage-services",
+    ),
+    path(
+        "manage/services/<slug:slug>/",
+        ServiceManagementDetailView.as_view(),
+        name="manage-service-detail",
+    ),
+    path(
+        "manage/services/<slug:slug>/draft/",
+        ServiceDraftView.as_view(),
+        name="manage-service-draft",
+    ),
+    path(
+        "manage/services/<slug:slug>/preview/",
+        ServicePreviewView.as_view(),
+        name="preview-service-draft",
+    ),
+    path(
+        "manage/services/<slug:slug>/publish/",
+        PublishServiceDraftView.as_view(),
+        name="publish-service-draft",
+    ),
+    path(
+        "manage/services/<slug:slug>/discard-draft/",
+        DiscardServiceDraftView.as_view(),
+        name="discard-service-draft",
+    ),
+    path(
+        "manage/services/<slug:slug>/archive/",
+        ArchiveServiceView.as_view(),
+        name="archive-service",
+    ),
+    path(
+        "manage/services/<slug:slug>/revisions/",
+        ServiceRevisionListView.as_view(),
+        name="service-revisions",
+    ),
+    path(
+        "manage/services/<slug:slug>/revisions/<int:revision_id>/restore/",
+        RestoreServiceRevisionView.as_view(),
+        name="restore-service-revision",
+    ),
+    path(
+        "manage/service-categories/",
+        ServiceCategoryListView.as_view(),
+        name="manage-service-categories",
+    ),
+    path(
+        "manage/service-categories/<slug:slug>/",
+        ServiceCategoryDetailView.as_view(),
+        name="manage-service-category",
+    ),
+]
