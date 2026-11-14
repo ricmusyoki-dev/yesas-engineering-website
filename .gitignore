@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Pipenv environments
+.venv/
+**/.venv/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+.credentials/
+.netrc
+.aws/credentials
+.docker/config.json
+.kube/
+.npmrc
+.pypirc
+credentials.*
+secrets.*
+
+# Private keys and credential stores
+.ssh/
+**/.ssh/
+id_rsa
+id_rsa.*
+id_dsa
+id_dsa.*
+id_ecdsa
+id_ecdsa.*
+id_ed25519
+id_ed25519.*
+id_ecdsa_sk
+id_ecdsa_sk.*
+id_ed25519_sk
+id_ed25519_sk.*
+id_xmss
+id_xmss.*
+ssh_host_*_key
+ssh_host_*_key.*
+*.pem
+*.key
+*.p8
+*.ppk
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Node
+node_modules/
+**/node_modules/
+dist/
+.vite/
+coverage/
+
+# Uploaded and generated files
+media/
+staticfiles/
+
+# Editor and OS
+.idea/
+.DS_Store
+Thumbs.db
+
+# VS Code workspace settings
+.vscode/
+**/.vscode/
