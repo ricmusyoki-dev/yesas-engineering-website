@@ -134,6 +134,12 @@ def create_section_draft(section_type: str, user) -> HomepageSectionRevision:
                 == HomepageSectionRevision.SectionType.FEATURED_SERVICES
             ):
                 revision.curated_services.set(published.curated_services.all())
+            if (
+                published
+                and section_type
+                == HomepageSectionRevision.SectionType.FEATURED_PROJECTS
+            ):
+                revision.curated_projects.set(published.curated_projects.all())
             return revision
     except IntegrityError as error:
         raise ActiveDraftExists from error
@@ -247,6 +253,16 @@ def restore_section_revision(
             )
             restored.full_clean()
             restored.save()
+            if (
+                restored.section_type
+                == HomepageSectionRevision.SectionType.FEATURED_SERVICES
+            ):
+                restored.curated_services.set(revision.curated_services.all())
+            elif (
+                restored.section_type
+                == HomepageSectionRevision.SectionType.FEATURED_PROJECTS
+            ):
+                restored.curated_projects.set(revision.curated_projects.all())
             return restored
     except IntegrityError as error:
         raise ActiveDraftExists from error

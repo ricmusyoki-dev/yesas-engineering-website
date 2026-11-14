@@ -176,6 +176,11 @@ class HomepageSectionRevision(RevisionMetadata):
         related_name="homepage_revisions",
         blank=True,
     )
+    curated_projects = models.ManyToManyField(
+        "projects.Project",
+        related_name="homepage_revisions",
+        blank=True,
+    )
 
     class Meta:
         ordering = ("display_order", "section_type", "-created_at", "-pk")

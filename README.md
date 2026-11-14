@@ -6,8 +6,9 @@ Official tagline: Expertise Wired to Perfection.
 
 This repository currently contains a Django REST Framework backend with
 email-based authentication, versioned company and homepage content, and a
-service catalogue with publishing workflows. Other Django apps are scaffolded
-but do not yet implement their planned features.
+service catalogue and project portfolio with revision-based publishing.
+Inquiries, testimonials, and media library apps are scaffolded but do not yet
+implement their planned features.
 
 The React frontend and deployment infrastructure (Docker, Nginx, and VPS
 configuration) are planned components and are not present in this repository.
@@ -34,6 +35,21 @@ configuration) are planned components and are not present in this repository.
 
 The test settings use an isolated in-memory SQLite database. PostgreSQL
 integration is not verified by the test suite.
+
+## Project portfolio behavior
+
+Projects have stable slugs, separate content revisions, categories, validated
+tags, and optional relationships to existing service identities. Project
+availability is independent of revision status; disabling or archiving a
+project hides it from public APIs without rewriting its revision history.
+Deactivating a category hides its projects publicly while preserving their
+category references and revision history. Reactivate the category or move a
+draft to an active category before publishing further content.
+
+The project portfolio deliberately stores no image paths, upload fields, or
+external cover-image URLs. A future Media Library integration should add
+relationships to managed media assets in a separate migration; it must not
+accept arbitrary file paths or URLs.
 
 ## Production email prerequisite
 

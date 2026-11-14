@@ -1,0 +1,98 @@
+from django.urls import path
+
+from .management_views import (
+    ArchiveProjectView,
+    DiscardProjectDraftView,
+    ProjectAvailabilityView,
+    ProjectCategoryDetailView,
+    ProjectCategoryListView,
+    ProjectDraftView,
+    ProjectManagementDetailView,
+    ProjectManagementListView,
+    ProjectPreviewView,
+    ProjectRevisionListView,
+    ProjectTagDetailView,
+    ProjectTagListView,
+    PublishProjectDraftView,
+    RestoreProjectRevisionView,
+)
+from .public_views import PublicProjectDetailView, PublicProjectListView
+
+urlpatterns = [
+    path("projects/", PublicProjectListView.as_view(), name="public-projects"),
+    path(
+        "projects/<slug:slug>/",
+        PublicProjectDetailView.as_view(),
+        name="public-project-detail",
+    ),
+    path(
+        "manage/projects/",
+        ProjectManagementListView.as_view(),
+        name="manage-projects",
+    ),
+    path(
+        "manage/projects/<slug:slug>/",
+        ProjectManagementDetailView.as_view(),
+        name="manage-project-detail",
+    ),
+    path(
+        "manage/projects/<slug:slug>/draft/",
+        ProjectDraftView.as_view(),
+        name="manage-project-draft",
+    ),
+    path(
+        "manage/projects/<slug:slug>/preview/",
+        ProjectPreviewView.as_view(),
+        name="preview-project-draft",
+    ),
+    path(
+        "manage/projects/<slug:slug>/publish/",
+        PublishProjectDraftView.as_view(),
+        name="publish-project-draft",
+    ),
+    path(
+        "manage/projects/<slug:slug>/discard-draft/",
+        DiscardProjectDraftView.as_view(),
+        name="discard-project-draft",
+    ),
+    path(
+        "manage/projects/<slug:slug>/archive/",
+        ArchiveProjectView.as_view(),
+        name="archive-project",
+    ),
+    path(
+        "manage/projects/<slug:slug>/availability/",
+        ProjectAvailabilityView.as_view(),
+        name="project-availability",
+    ),
+    path(
+        "manage/projects/<slug:slug>/revisions/",
+        ProjectRevisionListView.as_view(),
+        name="project-revisions",
+    ),
+    path(
+        "manage/projects/<slug:slug>/revisions/<int:revision_id>/restore/",
+        RestoreProjectRevisionView.as_view(),
+        name="restore-project-revision",
+    ),
+    path(
+        "manage/project-categories/",
+        ProjectCategoryListView.as_view(),
+        name="manage-project-categories",
+    ),
+    path(
+        "manage/project-categories/<slug:slug>/",
+        ProjectCategoryDetailView.as_view(),
+        name="manage-project-category",
+    ),
+    path(
+        "manage/project-tags/",
+        ProjectTagListView.as_view(),
+        name="manage-project-tags",
+    ),
+    path(
+        "manage/project-tags/<slug:slug>/",
+        ProjectTagDetailView.as_view(),
+        name="manage-project-tag",
+    ),
+]

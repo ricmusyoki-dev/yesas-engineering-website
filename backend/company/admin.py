@@ -17,7 +17,11 @@ class RevisionAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         fields = super().get_readonly_fields(request, obj)
         if obj is not None and obj.status != RevisionStatus.DRAFT:
-            return (*fields, *(field.name for field in obj._meta.fields))
+            return (
+                *fields,
+                *(field.name for field in obj._meta.fields),
+                *(field.name for field in obj._meta.many_to_many),
+            )
         return fields
 
     def save_model(self, request, obj, form, change):
@@ -117,6 +121,8 @@ class HomepageSectionRevisionAdmin(RevisionAdmin):
                     "cta_label",
                     "cta_destination",
                     "item_limit",
+                    "curated_services",
+                    "curated_projects",
                 )
             },
         ),

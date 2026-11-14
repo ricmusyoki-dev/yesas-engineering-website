@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
+from projects.models import Project, ProjectAvailability
 from services.models import Service
 
 from .models import CompanyProfileRevision, HomepageSectionRevision
@@ -34,6 +35,7 @@ SECTION_FIELDS = (
     "display_order",
     "item_limit",
     "curated_services",
+    "curated_projects",
 )
 
 REVISION_FIELDS = (
@@ -100,6 +102,13 @@ class HomepageSectionContentSerializer(
         many=True,
         required=False,
     )
+    curated_projects = serializers.PrimaryKeyRelatedField(
+        queryset=Project.objects.exclude(
+            availability=ProjectAvailability.ARCHIVED
+        ),
+        many=True,
+        required=False,
+    )
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -108,6 +117,7 @@ class HomepageSectionContentSerializer(
             self.instance.section_type if self.instance else None,
         )
         curated_services = attrs.get("curated_services")
+        curated_projects = attrs.get("curated_projects")
         if (
             section_type != HomepageSectionRevision.SectionType.FEATURED_SERVICES
             and curated_services
@@ -115,6 +125,17 @@ class HomepageSectionContentSerializer(
             raise serializers.ValidationError(
                 {
                     "curated_services": "Only featured-services sections may select services."
+                }
+            )
+        if (
+            section_type != HomepageSectionRevision.SectionType.FEATURED_PROJECTS
+            and curated_projects
+        ):
+            raise serializers.ValidationError(
+                {
+                    "curated_projects": (
+                        "Only featured-projects sections may select projects."
+                    )
                 }
             )
         return attrs
@@ -133,9 +154,11 @@ class PublicHomepageSectionSerializer(serializers.ModelSerializer):
             "display_order",
             "item_limit",
             "featured_services",
+            "featured_projects",
         )
 
     featured_services = serializers.SerializerMethodField()
+    featured_projects = serializers.SerializerMethodField()
 
     def get_featured_services(self, instance):
         if (
@@ -151,6 +174,24 @@ class PublicHomepageSectionSerializer(serializers.ModelSerializer):
         services = public_revisions_for_services(instance.curated_services.all())
         return PublicServiceSerializer(
             services[: instance.item_limit],
+            many=True,
+            context={"request": self.context.get("request")},
+        ).data
+
+    def get_featured_projects(self, instance):
+        if (
+            instance.section_type
+            != HomepageSectionRevision.SectionType.FEATURED_PROJECTS
+        ):
+            return []
+        from projects.public_serializers import (
+            PublicProjectSerializer,
+            public_project_revisions,
+        )
+
+        projects = public_project_revisions(instance.curated_projects.all())
+        return PublicProjectSerializer(
+            projects[: instance.item_limit],
             many=True,
             context={"request": self.context.get("request")},
         ).data
