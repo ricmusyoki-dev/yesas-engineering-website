@@ -175,6 +175,22 @@ MEDIA_URL = "/media/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 
+MEDIA_PRIVATE_ROOT = Path(
+    env(
+        "MEDIA_PRIVATE_ROOT",
+        default=str(ROOT_DIR.parent / "yesas-private-media"),
+    )
+).expanduser().resolve()
+MEDIA_IMAGE_MAX_BYTES = env.int("MEDIA_IMAGE_MAX_BYTES", default=12 * 1024 * 1024)
+MEDIA_VIDEO_MAX_BYTES = env.int("MEDIA_VIDEO_MAX_BYTES", default=100 * 1024 * 1024)
+MEDIA_IMAGE_MAX_DIMENSION = env.int("MEDIA_IMAGE_MAX_DIMENSION", default=8192)
+MEDIA_IMAGE_MAX_PIXELS = env.int("MEDIA_IMAGE_MAX_PIXELS", default=20_000_000)
+MEDIA_THUMBNAIL_MAX_DIMENSION = env.int(
+    "MEDIA_THUMBNAIL_MAX_DIMENSION",
+    default=512,
+)
+MEDIA_X_ACCEL_PREFIX = env("MEDIA_X_ACCEL_PREFIX", default="")
+
 
 # --------------------------------------------------
 # EMAIL

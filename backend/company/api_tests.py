@@ -195,8 +195,12 @@ class CompanyPublicApiTests(TestCase):
                 "facebook_url",
                 "tiktok_url",
                 "youtube_url",
+                "logo",
+                "images",
             },
         )
+        self.assertIsNone(response.data["logo"])
+        self.assertEqual(response.data["images"], [])
         self.assertEqual(APIClient().post(PROFILE_URL).status_code, 405)
 
     def test_homepage_is_public_ordered_visible_and_published_only(self):

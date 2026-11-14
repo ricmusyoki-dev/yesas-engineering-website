@@ -6,9 +6,9 @@ Official tagline: Expertise Wired to Perfection.
 
 This repository currently contains a Django REST Framework backend with
 email-based authentication, versioned company and homepage content, and a
-service catalogue and project portfolio with revision-based publishing.
-Inquiries, testimonials, and media library apps are scaffolded but do not yet
-implement their planned features.
+service catalogue, project portfolio, and private media library with
+revision-based publishing. Inquiries and testimonials are scaffolded but do
+not yet implement their planned features.
 
 The React frontend and deployment infrastructure (Docker, Nginx, and VPS
 configuration) are planned components and are not present in this repository.
@@ -46,10 +46,35 @@ Deactivating a category hides its projects publicly while preserving their
 category references and revision history. Reactivate the category or move a
 draft to an active category before publishing further content.
 
-The project portfolio deliberately stores no image paths, upload fields, or
-external cover-image URLs. A future Media Library integration should add
-relationships to managed media assets in a separate migration; it must not
-accept arbitrary file paths or URLs.
+## Media library
+
+The media library accepts JPEG, PNG, and WebP images and MP4/WebM videos
+through authenticated management APIs. Image uploads are decoded, checked
+against dimension and pixel limits, re-encoded without source metadata, and
+given a WebP thumbnail. Animated images are not accepted. The default limits
+are 12 MiB per image, 100 MiB per video, 8192 pixels per image dimension,
+20 million image pixels, and 512 pixels per thumbnail; they can be changed
+with the corresponding `MEDIA_*` environment variables.
+
+Video validation currently checks the container signature only. It does not
+decode the video, inspect its duration or dimensions, or generate a thumbnail.
+Do not treat an accepted video as fully decoded or transcoded.
+
+Media files use `MEDIA_PRIVATE_ROOT`, separate from `MEDIA_ROOT` and the
+static-file root. Production must provision this as an absolute path on
+persistent private storage before starting the application, and restrict its
+directory access to the application service account (mode `0700`; stored files
+use mode `0600`). Production startup requires `MEDIA_PRIVATE_ROOT`; local
+development uses a private directory outside the repository by default.
+Back up this volume together with the database.
+
+Content delivery is protected by published revision attachments. Unreferenced
+assets are not public; draft and archived assets are not delivered. The Django
+application streams files by default. An optional Nginx `X-Accel-Redirect`
+configuration can be enabled with `MEDIA_X_ACCEL_PREFIX`, but deployment must
+provide a matching `internal` location and alias to the same private volume.
+Never expose that volume through a public static or media URL. Public responses
+may be cached for up to five minutes.
 
 ## Production email prerequisite
 
@@ -59,3 +84,7 @@ production email-sending feature, provision an SMTP provider and configure
 `SMTP_USE_SSL`, and `SMTP_TIMEOUT`. The application does not assume a company
 domain or mailbox, and startup does not require SMTP credentials while email
 sending remains unused.
+
+The production deployment check also reports Django warning `security.W004`
+because `SECURE_HSTS_SECONDS` is unset. Configure HSTS only after the actual
+deployment is confirmed to serve the entire site exclusively over HTTPS.

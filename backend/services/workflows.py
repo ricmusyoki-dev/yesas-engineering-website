@@ -3,6 +3,10 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 
 from company.models import RevisionStatus
+from media_library.attachment_workflows import (
+    copy_revision_attachments,
+    validate_revision_attachments,
+)
 
 from .models import SERVICE_CONTENT_FIELDS, Service, ServiceCategory, ServiceRevision
 
@@ -54,6 +58,8 @@ def create_revision_draft(service: Service, user) -> ServiceRevision:
             )
             revision.full_clean()
             revision.save()
+            if published:
+                copy_revision_attachments(published, revision, user)
             return revision
     except IntegrityError as error:
         raise ActiveServiceDraftExists from error
@@ -77,6 +83,7 @@ def publish_service_draft(service: Service, user) -> ServiceRevision | None:
         draft.published_at = timezone.now()
         draft.updated_by = user
         draft.full_clean(validate_constraints=False)
+        validate_revision_attachments(draft)
 
         ServiceRevision.objects.select_for_update().filter(
             service=locked_service,
@@ -108,6 +115,7 @@ def restore_service_revision(revision: ServiceRevision, user) -> ServiceRevision
             )
             restored.full_clean()
             restored.save()
+            copy_revision_attachments(revision, restored, user)
             return restored
     except IntegrityError as error:
         raise ActiveServiceDraftExists from error

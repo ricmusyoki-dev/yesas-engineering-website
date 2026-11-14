@@ -1,10 +1,18 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db.models import Prefetch
 from rest_framework import serializers
 
+from media_library.models import MediaLifecycle
+from media_library.presentation import media_for_role
 from projects.models import Project, ProjectAvailability
 from services.models import Service
 
-from .models import CompanyProfileRevision, HomepageSectionRevision
+from .models import (
+    CompanyProfileMediaAttachment,
+    CompanyProfileRevision,
+    HomepageSectionMediaAttachment,
+    HomepageSectionRevision,
+)
 
 PROFILE_FIELDS = (
     "name",
@@ -89,6 +97,20 @@ class CompanyProfileRevisionSerializer(CompanyProfileContentSerializer):
         return super().update(instance, validated_data)
 
 
+class PublicCompanyProfileSerializer(CompanyProfileContentSerializer):
+    logo = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
+
+    class Meta(CompanyProfileContentSerializer.Meta):
+        fields = (*PROFILE_FIELDS, "logo", "images")
+
+    def get_logo(self, revision):
+        return next(iter(media_for_role(revision, "logo")), None)
+
+    def get_images(self, revision):
+        return media_for_role(revision, "section_image")
+
+
 class HomepageSectionContentSerializer(
     ModelValidationMixin,
     serializers.ModelSerializer,
@@ -155,10 +177,18 @@ class PublicHomepageSectionSerializer(serializers.ModelSerializer):
             "item_limit",
             "featured_services",
             "featured_projects",
+            "hero_image",
+            "hero_video",
+            "images",
+            "videos",
         )
 
     featured_services = serializers.SerializerMethodField()
     featured_projects = serializers.SerializerMethodField()
+    hero_image = serializers.SerializerMethodField()
+    hero_video = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
+    videos = serializers.SerializerMethodField()
 
     def get_featured_services(self, instance):
         if (
@@ -195,6 +225,45 @@ class PublicHomepageSectionSerializer(serializers.ModelSerializer):
             many=True,
             context={"request": self.context.get("request")},
         ).data
+
+    def get_hero_image(self, instance):
+        if instance.section_type != HomepageSectionRevision.SectionType.HERO:
+            return None
+        return next(iter(media_for_role(instance, "hero_image")), None)
+
+    def get_hero_video(self, instance):
+        if instance.section_type != HomepageSectionRevision.SectionType.HERO:
+            return None
+        return next(iter(media_for_role(instance, "hero_video")), None)
+
+    def get_images(self, instance):
+        return media_for_role(instance, "section_image")
+
+    def get_videos(self, instance):
+        return media_for_role(instance, "section_video")
+
+
+def with_public_homepage_media(queryset):
+    return queryset.prefetch_related(
+        Prefetch(
+            "media_attachments",
+            queryset=HomepageSectionMediaAttachment.objects.filter(
+                asset__lifecycle=MediaLifecycle.ACTIVE
+            ).select_related("asset"),
+            to_attr="public_media_attachments",
+        )
+    )
+
+
+def with_public_company_media(profile):
+    return (
+        CompanyProfileMediaAttachment.objects.filter(
+            revision=profile,
+            asset__lifecycle=MediaLifecycle.ACTIVE,
+        )
+        .select_related("asset")
+        .order_by("display_order", "created_at", "pk")
+    )
 
 
 class HomepageSectionRevisionSerializer(HomepageSectionContentSerializer):

@@ -12,6 +12,11 @@ from django.utils.text import slugify
 
 from company.models import RevisionStatus
 from company.validators import validate_cta_destination
+from media_library.models import (
+    AttachmentRole,
+    MediaType,
+    RevisionMediaAttachment,
+)
 
 SERVICE_CONTENT_FIELDS = (
     "title",
@@ -254,3 +259,31 @@ class ServiceRevision(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.status})"
+
+
+class ServiceMediaAttachment(RevisionMediaAttachment):
+    revision = models.ForeignKey(
+        ServiceRevision,
+        on_delete=models.CASCADE,
+        related_name="media_attachments",
+    )
+
+    ALLOWED_ROLES: ClassVar[dict[str, str]] = {
+        AttachmentRole.COVER_IMAGE: MediaType.IMAGE,
+        AttachmentRole.GALLERY_IMAGE: MediaType.IMAGE,
+        AttachmentRole.VIDEO: MediaType.VIDEO,
+    }
+
+    class Meta(RevisionMediaAttachment.Meta):
+        abstract = False
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            models.UniqueConstraint(
+                fields=("revision", "asset"),
+                name="service_media_asset_once",
+            ),
+            models.UniqueConstraint(
+                fields=("revision",),
+                condition=Q(role=AttachmentRole.COVER_IMAGE),
+                name="service_one_media_cover",
+            ),
+        ]

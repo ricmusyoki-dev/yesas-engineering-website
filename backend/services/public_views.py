@@ -5,7 +5,7 @@ from rest_framework.permissions import AllowAny
 from company.models import RevisionStatus
 
 from .models import ServiceRevision
-from .public_serializers import PublicServiceSerializer
+from .public_serializers import PublicServiceSerializer, with_public_service_media
 
 
 class PublicServiceQueryMixin:
@@ -27,7 +27,9 @@ class PublicServiceQueryMixin:
         category_slug = self.request.query_params.get("category")
         if category_slug:
             queryset = queryset.filter(category__slug=category_slug)
-        return queryset.order_by("display_order", "title", "service__slug")
+        return with_public_service_media(
+            queryset.order_by("display_order", "title", "service__slug")
+        )
 
 
 class PublicServiceListView(PublicServiceQueryMixin, ListAPIView):

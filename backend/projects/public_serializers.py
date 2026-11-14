@@ -1,6 +1,8 @@
 from django.db.models import Prefetch, Q
 from rest_framework import serializers
 
+from media_library.models import MediaLifecycle
+from media_library.presentation import media_for_role
 from services.models import Service, ServiceRevision
 from services.public_serializers import (
     PublicServiceSerializer,
@@ -10,6 +12,7 @@ from services.public_serializers import (
 from .models import (
     ProjectAvailability,
     ProjectCategory,
+    ProjectMediaAttachment,
     ProjectRevision,
     ProjectRevisionStatus,
     ProjectTag,
@@ -34,6 +37,9 @@ class PublicProjectSerializer(serializers.ModelSerializer):
     tags = serializers.SerializerMethodField()
     related_services = serializers.SerializerMethodField()
     client_name = serializers.SerializerMethodField()
+    cover_image = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
+    videos = serializers.SerializerMethodField()
 
     class Meta:
         model = ProjectRevision
@@ -61,7 +67,19 @@ class PublicProjectSerializer(serializers.ModelSerializer):
             "client_name",
             "seo_title",
             "seo_description",
+            "cover_image",
+            "images",
+            "videos",
         )
+
+    def get_cover_image(self, revision):
+        return next(iter(media_for_role(revision, "cover_image")), None)
+
+    def get_images(self, revision):
+        return media_for_role(revision, "gallery_image")
+
+    def get_videos(self, revision):
+        return media_for_role(revision, "video")
 
     def get_tags(self, revision):
         tags = getattr(revision, "public_tags", None)
@@ -128,6 +146,13 @@ def public_project_revisions(projects=None):
                 to_attr="public_tags",
             ),
             Prefetch("related_services", queryset=services),
+            Prefetch(
+                "media_attachments",
+                queryset=ProjectMediaAttachment.objects.filter(
+                    asset__lifecycle=MediaLifecycle.ACTIVE
+                ).select_related("asset"),
+                to_attr="public_media_attachments",
+            ),
         )
         .filter(
             status=ProjectRevisionStatus.PUBLISHED,

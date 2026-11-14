@@ -2,6 +2,11 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from media_library.attachment_workflows import (
+    copy_revision_attachments,
+    validate_revision_attachments,
+)
+
 from .models import (
     CompanyProfileRevision,
     HomepageSectionRevision,
@@ -84,6 +89,8 @@ def create_profile_draft(user) -> CompanyProfileRevision:
             )
             revision.full_clean()
             revision.save()
+            if published:
+                copy_revision_attachments(published, revision, user)
             return revision
     except IntegrityError as error:
         raise ActiveDraftExists from error
@@ -140,6 +147,8 @@ def create_section_draft(section_type: str, user) -> HomepageSectionRevision:
                 == HomepageSectionRevision.SectionType.FEATURED_PROJECTS
             ):
                 revision.curated_projects.set(published.curated_projects.all())
+            if published:
+                copy_revision_attachments(published, revision, user)
             return revision
     except IntegrityError as error:
         raise ActiveDraftExists from error
@@ -163,6 +172,7 @@ def publish_profile_draft(user) -> CompanyProfileRevision | None:
         draft.published_at = timezone.now()
         draft.updated_by = user
         draft.full_clean(validate_constraints=False)
+        validate_revision_attachments(draft)
 
         CompanyProfileRevision.objects.select_for_update().filter(
             scope=CompanyProfileRevision.COMPANY_SCOPE,
@@ -194,6 +204,7 @@ def publish_section_draft(section_type: str, user) -> HomepageSectionRevision | 
         draft.published_at = timezone.now()
         draft.updated_by = user
         draft.full_clean(validate_constraints=False)
+        validate_revision_attachments(draft)
 
         HomepageSectionRevision.objects.select_for_update().filter(
             section_type=section_type,
@@ -228,6 +239,7 @@ def restore_profile_revision(
             )
             restored.full_clean()
             restored.save()
+            copy_revision_attachments(revision, restored, user)
             return restored
     except IntegrityError as error:
         raise ActiveDraftExists from error
@@ -263,6 +275,7 @@ def restore_section_revision(
                 == HomepageSectionRevision.SectionType.FEATURED_PROJECTS
             ):
                 restored.curated_projects.set(revision.curated_projects.all())
+            copy_revision_attachments(revision, restored, user)
             return restored
     except IntegrityError as error:
         raise ActiveDraftExists from error

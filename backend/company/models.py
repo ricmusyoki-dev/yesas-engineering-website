@@ -8,6 +8,12 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
+from media_library.models import (
+    AttachmentRole,
+    MediaType,
+    RevisionMediaAttachment,
+)
+
 from .validators import validate_cta_destination, validate_social_url
 
 COMPANY_SCOPE = "company"
@@ -251,3 +257,64 @@ class HomepageSectionRevision(RevisionMetadata):
 
     def __str__(self):
         return f"{self.get_section_type_display()} ({self.status})"
+
+
+class CompanyProfileMediaAttachment(RevisionMediaAttachment):
+    revision = models.ForeignKey(
+        CompanyProfileRevision,
+        on_delete=models.CASCADE,
+        related_name="media_attachments",
+    )
+
+    ALLOWED_ROLES: ClassVar[dict[str, str]] = {
+        AttachmentRole.LOGO: MediaType.IMAGE,
+        AttachmentRole.SECTION_IMAGE: MediaType.IMAGE,
+    }
+
+    class Meta(RevisionMediaAttachment.Meta):
+        abstract = False
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            models.UniqueConstraint(
+                fields=("revision", "asset"),
+                name="company_media_asset_once",
+            ),
+            models.UniqueConstraint(
+                fields=("revision",),
+                condition=Q(role=AttachmentRole.LOGO),
+                name="company_one_media_logo",
+            ),
+        ]
+
+
+class HomepageSectionMediaAttachment(RevisionMediaAttachment):
+    revision = models.ForeignKey(
+        HomepageSectionRevision,
+        on_delete=models.CASCADE,
+        related_name="media_attachments",
+    )
+
+    ALLOWED_ROLES: ClassVar[dict[str, str]] = {
+        AttachmentRole.HERO_IMAGE: MediaType.IMAGE,
+        AttachmentRole.HERO_VIDEO: MediaType.VIDEO,
+        AttachmentRole.SECTION_IMAGE: MediaType.IMAGE,
+        AttachmentRole.SECTION_VIDEO: MediaType.VIDEO,
+    }
+
+    class Meta(RevisionMediaAttachment.Meta):
+        abstract = False
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            models.UniqueConstraint(
+                fields=("revision", "asset"),
+                name="homepage_media_asset_once",
+            ),
+            models.UniqueConstraint(
+                fields=("revision",),
+                condition=Q(role=AttachmentRole.HERO_IMAGE),
+                name="homepage_one_hero_image",
+            ),
+            models.UniqueConstraint(
+                fields=("revision",),
+                condition=Q(role=AttachmentRole.HERO_VIDEO),
+                name="homepage_one_hero_video",
+            ),
+        ]

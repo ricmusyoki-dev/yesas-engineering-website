@@ -2,10 +2,16 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import CompanyProfileRevision, HomepageSectionRevision, RevisionStatus
+from .models import (
+    CompanyProfileRevision,
+    HomepageSectionRevision,
+    RevisionStatus,
+)
 from .serializers import (
-    CompanyProfileContentSerializer,
+    PublicCompanyProfileSerializer,
     PublicHomepageSectionSerializer,
+    with_public_company_media,
+    with_public_homepage_media,
 )
 
 
@@ -19,16 +25,19 @@ class PublicCompanyProfileView(APIView):
         ).first()
         if profile is None:
             return Response({"detail": "Company profile not found."}, status=404)
-        return Response(CompanyProfileContentSerializer(profile).data)
+        profile.public_media_attachments = with_public_company_media(profile)
+        return Response(PublicCompanyProfileSerializer(profile).data)
 
 
 class PublicHomepageView(APIView):
     permission_classes = (AllowAny,)
 
     def get(self, request):
-        sections = HomepageSectionRevision.objects.filter(
-            status=RevisionStatus.PUBLISHED,
-            is_visible=True,
+        sections = with_public_homepage_media(
+            HomepageSectionRevision.objects.filter(
+                status=RevisionStatus.PUBLISHED,
+                is_visible=True,
+            )
         )
         return Response(
             {

@@ -10,6 +10,12 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.text import slugify
 
+from media_library.models import (
+    AttachmentRole,
+    MediaType,
+    RevisionMediaAttachment,
+)
+
 
 class ProjectRevisionStatus(models.TextChoices):
     DRAFT = "draft", "Draft"
@@ -342,3 +348,31 @@ class ProjectRevision(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.status})"
+
+
+class ProjectMediaAttachment(RevisionMediaAttachment):
+    revision = models.ForeignKey(
+        ProjectRevision,
+        on_delete=models.CASCADE,
+        related_name="media_attachments",
+    )
+
+    ALLOWED_ROLES: ClassVar[dict[str, str]] = {
+        AttachmentRole.COVER_IMAGE: MediaType.IMAGE,
+        AttachmentRole.GALLERY_IMAGE: MediaType.IMAGE,
+        AttachmentRole.VIDEO: MediaType.VIDEO,
+    }
+
+    class Meta(RevisionMediaAttachment.Meta):
+        abstract = False
+        constraints: ClassVar[list[models.BaseConstraint]] = [
+            models.UniqueConstraint(
+                fields=("revision", "asset"),
+                name="project_media_asset_once",
+            ),
+            models.UniqueConstraint(
+                fields=("revision",),
+                condition=Q(role=AttachmentRole.COVER_IMAGE),
+                name="project_one_media_cover",
+            ),
+        ]

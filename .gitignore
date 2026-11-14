@@ -64,6 +64,9 @@ coverage/
 
 # Uploaded and generated files
 media/
+private_media/
+private-media/
+yesas-private-media/
 staticfiles/
 
 # Editor and OS

@@ -2,6 +2,11 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from media_library.attachment_workflows import (
+    copy_revision_attachments,
+    validate_revision_attachments,
+)
+
 from .models import (
     PROJECT_CONTENT_FIELDS,
     Project,
@@ -99,6 +104,7 @@ def create_revision_draft(project: Project, user) -> ProjectRevision:
             revision.save()
             if published:
                 _set_revision_relations(revision, published)
+                copy_revision_attachments(published, revision, user)
             return revision
     except IntegrityError as error:
         raise ActiveProjectDraftExists from error
@@ -125,6 +131,7 @@ def publish_project_draft(project: Project, user) -> ProjectRevision | None:
         draft.published_at = timezone.now()
         draft.updated_by = user
         draft.full_clean(validate_constraints=False)
+        validate_revision_attachments(draft)
         validate_publish_relationships(draft)
 
         ProjectRevision.objects.select_for_update().filter(
@@ -167,6 +174,7 @@ def restore_project_revision(
             restored.full_clean()
             restored.save()
             _set_revision_relations(restored, revision)
+            copy_revision_attachments(revision, restored, user)
             return restored
     except IntegrityError as error:
         raise ActiveProjectDraftExists from error

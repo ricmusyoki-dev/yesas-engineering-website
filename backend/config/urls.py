@@ -24,4 +24,5 @@ urlpatterns = [
     path("api/v1/", include("company.urls")),
     path("api/v1/", include("services.urls")),
     path("api/v1/", include("projects.urls")),
+    path("api/v1/media/", include("media_library.urls")),
 ]

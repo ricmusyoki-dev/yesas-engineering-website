@@ -1,6 +1,10 @@
+from pathlib import Path
+
 from .base import *
 
 DEBUG = False
+
+MEDIA_PRIVATE_ROOT = Path(env("MEDIA_PRIVATE_ROOT")).expanduser().resolve()
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS")
 
