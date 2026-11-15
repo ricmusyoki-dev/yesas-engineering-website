@@ -2,7 +2,12 @@
 
 This Compose configuration runs PostgreSQL 17 for local development. Django
 continues to run directly in Ubuntu and connects through the existing
-`DATABASE_URL` in the root `.env`, using `127.0.0.1:5432`.
+`DATABASE_URL` in the root `.env`, using `127.0.0.1:5433`.
+
+The existing Windows PostgreSQL installation already uses port `5432`. This
+project therefore publishes its database on Ubuntu's loopback port `5433`,
+forwarded to PostgreSQL's standard container port `5432`; the Windows
+installation is left untouched.
 
 ## Start PostgreSQL
 
@@ -14,8 +19,10 @@ docker compose --project-directory . --env-file .env -f infra/compose.yaml up -d
 
 Compose reads `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` from the
 root `.env`; all three are required. The database is published only on
-`127.0.0.1:5432`, so it is reachable to development tools in Ubuntu without
-exposing the port on other network interfaces.
+`127.0.0.1:5433` and mapped to container port `5432`, so Django running
+directly in Ubuntu can connect without exposing the port on other network
+interfaces. The existing root `.env` `DATABASE_URL` must use
+`127.0.0.1:5433`.
 
 ## Verify health and connections
 
