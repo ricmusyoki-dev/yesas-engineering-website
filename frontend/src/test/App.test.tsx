@@ -1,29 +1,65 @@
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { appRoutes } from '../app/router'
 import { Header } from '../components/Header'
+import type { CompanyProfile, HomepageContent } from '../lib/api/types'
+import { makeCompanyProfile } from './fixtures'
+
+const { getCompanyProfileMock, getHomepageContentMock } = vi.hoisted(() => ({
+  getCompanyProfileMock: vi.fn<() => Promise<CompanyProfile>>(),
+  getHomepageContentMock: vi.fn<() => Promise<HomepageContent>>(),
+}))
+
+vi.mock('../features/company/api', () => ({
+  getCompanyProfile: getCompanyProfileMock,
+  getHomepageContent: getHomepageContentMock,
+}))
 
 function renderRoute(path: string) {
   const router = createMemoryRouter(appRoutes, { initialEntries: [path] })
   return render(<RouterProvider router={router} />)
 }
 
+beforeEach(() => {
+  getCompanyProfileMock.mockResolvedValue(makeCompanyProfile())
+  getHomepageContentMock.mockResolvedValue({ sections: [] })
+})
+
 describe('public application routes', () => {
-  it('renders the home route in the shared public layout', () => {
+  it('renders the home route in the shared public layout', async () => {
     renderRoute('/')
 
-    expect(screen.getByRole('heading', { name: 'Home' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Home' }),
+    ).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: 'Skip to content' }),
     ).toHaveAttribute('href', '#main-content')
     expect(screen.getByRole('contentinfo')).toHaveTextContent('Yesas Engineering')
   })
 
-  it('renders the about route', () => {
+  it('renders the about route', async () => {
     renderRoute('/about')
 
-    expect(screen.getByRole('heading', { name: 'About' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('heading', { name: 'Test Engineering' }),
+    ).toBeInTheDocument()
+  })
+
+  it('resets page metadata after navigating away from a CMS page', async () => {
+    renderRoute('/about')
+
+    await screen.findByRole('heading', { name: 'Test Engineering' })
+    expect(document.title).toBe('Test Engineering | About | Yesas Engineering')
+
+    fireEvent.click(screen.getByRole('link', { name: 'Services' }))
+    await screen.findByText(
+      'Published services are not connected in this foundation milestone.',
+    )
+    await waitFor(() => {
+      expect(document.title).toBe('Yesas Engineering')
+    })
   })
 
   it('renders the services route', () => {
