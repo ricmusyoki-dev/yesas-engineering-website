@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* Yesas Engineering design system */
+@theme {
+  --color-brand-navy: #17143F;
+  --color-brand-orange: #F47B20;
+  --color-brand-blue: #24618C;
+  --color-brand-gold: #B69A55;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Global application styles */
+:root {
+  font-family: var(--font-sans);
+  color: var(--color-brand-navy);
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 1rem;
+  transform: translateY(-150%);
+  border-radius: 9999px;
+  background: var(--color-brand-navy);
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+}
+
+.skip-link:focus {
+  transform: translateY(1rem);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand-orange);
+  outline-offset: 3px;
+}
+
+/* Respect accessibility preferences */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
