@@ -61,6 +61,9 @@ export type AttachmentRole =
   | 'hero_image'
   | 'hero_video'
   | 'section_video'
+  | 'cover_image'
+  | 'gallery_image'
+  | 'video'
 
 export interface MediaAsset {
   id: string

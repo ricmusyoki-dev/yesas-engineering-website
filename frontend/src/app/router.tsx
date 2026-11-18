@@ -13,6 +13,7 @@ import {
 import { LoginPage } from '../features/auth/LoginPage'
 import { CompanyProfilePage } from '../features/company/CompanyProfilePage'
 import { HomepagePage } from '../features/homepage/HomepagePage'
+import { ServicesManagementPage } from '../features/services/ServicesManagementPage'
 import { PublicLayout } from '../layouts/PublicLayout'
 import { AboutPage } from '../pages/AboutPage'
 import { ContactPage } from '../pages/ContactPage'
@@ -52,7 +53,7 @@ export const appRoutes: RouteObject[] = [
               },
               {
                 path: 'services',
-                element: <DashboardModulePage title="Services" />,
+                element: <ServicesManagementPage />,
               },
               {
                 path: 'projects',

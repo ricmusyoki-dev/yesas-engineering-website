@@ -52,7 +52,8 @@ function matchesRole(file: File, attachmentRole: AttachmentRole): boolean {
   const isVideo =
     file.type.startsWith('video/') ||
     ['mp4', 'webm'].includes(file.name.split('.').pop()?.toLowerCase() ?? '')
-  const expectsVideo = ['hero_video', 'section_video'].includes(attachmentRole)
+  const expectsVideo =
+    attachmentRole === 'video' || attachmentRole.endsWith('_video')
   return isVideo === expectsVideo
 }
 
@@ -133,7 +134,9 @@ export function MediaAttachmentsManager({
     }
     if (!matchesRole(file, role)) {
       setError(
-        role.endsWith('_video') ? 'Choose a video for this role.' : 'Choose an image for this role.',
+        role === 'video' || role.endsWith('_video')
+          ? 'Choose a video for this role.'
+          : 'Choose an image for this role.',
       )
       return
     }

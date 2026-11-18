@@ -8,6 +8,7 @@ import type {
 export type AttachmentTarget =
   | 'company_profile_revision'
   | 'homepage_section_revision'
+  | 'service_revision'
 
 export interface MediaUploadMetadata {
   title?: string

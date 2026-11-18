@@ -18,8 +18,8 @@ const modules = [
   {
     to: '/dashboard/services',
     title: 'Services',
-    description: 'Organise the service catalogue and categories.',
-    available: false,
+    description: 'Manage service drafts, categories, and media.',
+    available: true,
   },
   {
     to: '/dashboard/projects',
@@ -66,7 +66,7 @@ export function DashboardOverview() {
             Website areas
           </h2>
           <p className="text-sm text-slate-500">
-            Company and homepage editing are available in this milestone.
+            Company, homepage, and services editing are available.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
