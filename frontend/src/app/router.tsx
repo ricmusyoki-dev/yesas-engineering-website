@@ -1,4 +1,16 @@
 import { createBrowserRouter, type RouteObject } from 'react-router-dom'
+import { DashboardLayout } from '../features/dashboard/DashboardLayout'
+import {
+  DashboardModulePage,
+  DashboardOverview,
+  NotAuthorizedPage,
+} from '../features/dashboard/DashboardPages'
+import {
+  AuthenticatedRoute,
+  LoginRoute,
+  ManagementRoleRoute,
+} from '../features/auth/ProtectedRoutes'
+import { LoginPage } from '../features/auth/LoginPage'
 import { PublicLayout } from '../layouts/PublicLayout'
 import { AboutPage } from '../pages/AboutPage'
 import { ContactPage } from '../pages/ContactPage'
@@ -11,6 +23,49 @@ import { ServiceDetailPage } from '../pages/ServiceDetailPage'
 import { ServicesPage } from '../pages/ServicesPage'
 
 export const appRoutes: RouteObject[] = [
+  {
+    path: '/dashboard/login',
+    element: <LoginRoute />,
+    children: [{ index: true, element: <LoginPage /> }],
+  },
+  {
+    path: '/dashboard',
+    element: <AuthenticatedRoute />,
+    children: [
+      { path: 'not-authorized', element: <NotAuthorizedPage /> },
+      {
+        element: <ManagementRoleRoute />,
+        children: [
+          {
+            element: <DashboardLayout />,
+            children: [
+              { index: true, element: <DashboardOverview /> },
+              {
+                path: 'company',
+                element: <DashboardModulePage title="Company Profile" />,
+              },
+              {
+                path: 'homepage',
+                element: <DashboardModulePage title="Homepage" />,
+              },
+              {
+                path: 'services',
+                element: <DashboardModulePage title="Services" />,
+              },
+              {
+                path: 'projects',
+                element: <DashboardModulePage title="Projects" />,
+              },
+              {
+                path: 'media',
+                element: <DashboardModulePage title="Media Library" />,
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
   {
     path: '/',
     element: <PublicLayout />,
