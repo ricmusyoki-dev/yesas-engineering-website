@@ -7,26 +7,31 @@ const modules = [
     to: '/dashboard/company',
     title: 'Company Profile',
     description: 'Manage company information and contact details.',
+    available: true,
   },
   {
     to: '/dashboard/homepage',
     title: 'Homepage',
     description: 'Prepare homepage sections and featured content.',
+    available: true,
   },
   {
     to: '/dashboard/services',
     title: 'Services',
     description: 'Organise the service catalogue and categories.',
+    available: false,
   },
   {
     to: '/dashboard/projects',
     title: 'Projects',
     description: 'Manage project stories, categories, and tags.',
+    available: false,
   },
   {
     to: '/dashboard/media',
     title: 'Media Library',
     description: 'Upload and organise images and video.',
+    available: false,
   },
 ]
 
@@ -61,7 +66,7 @@ export function DashboardOverview() {
             Website areas
           </h2>
           <p className="text-sm text-slate-500">
-            Content tools are being introduced in planned milestones.
+            Company and homepage editing are available in this milestone.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -75,8 +80,14 @@ export function DashboardOverview() {
                 <h3 className="font-semibold text-brand-navy">
                   {module.title}
                 </h3>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                  Coming soon
+                <span
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${
+                    module.available
+                      ? 'bg-emerald-100 text-emerald-900'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {module.available ? 'Available' : 'Coming soon'}
                 </span>
               </div>
               <p className="mt-3 text-sm leading-6 text-slate-600">

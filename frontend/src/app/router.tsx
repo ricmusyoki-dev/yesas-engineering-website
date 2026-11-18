@@ -11,6 +11,8 @@ import {
   ManagementRoleRoute,
 } from '../features/auth/ProtectedRoutes'
 import { LoginPage } from '../features/auth/LoginPage'
+import { CompanyProfilePage } from '../features/company/CompanyProfilePage'
+import { HomepagePage } from '../features/homepage/HomepagePage'
 import { PublicLayout } from '../layouts/PublicLayout'
 import { AboutPage } from '../pages/AboutPage'
 import { ContactPage } from '../pages/ContactPage'
@@ -42,11 +44,11 @@ export const appRoutes: RouteObject[] = [
               { index: true, element: <DashboardOverview /> },
               {
                 path: 'company',
-                element: <DashboardModulePage title="Company Profile" />,
+                element: <CompanyProfilePage />,
               },
               {
                 path: 'homepage',
-                element: <DashboardModulePage title="Homepage" />,
+                element: <HomepagePage />,
               },
               {
                 path: 'services',

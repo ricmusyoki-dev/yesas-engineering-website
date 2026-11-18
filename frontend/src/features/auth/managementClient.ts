@@ -25,6 +25,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+function formatValidationMessage(value: unknown): string | null {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (Array.isArray(value)) {
+    const messages = value
+      .map(formatValidationMessage)
+      .filter((message): message is string => message !== null)
+    return messages.length > 0 ? messages.join(' ') : null
+  }
+  if (isRecord(value)) {
+    const messages = Object.entries(value)
+      .map(([field, detail]) => {
+        const message = formatValidationMessage(detail)
+        return message ? `${field}: ${message}` : null
+      })
+      .filter((message): message is string => message !== null)
+    return messages.length > 0 ? messages.join(' ') : null
+  }
+  return null
+}
+
 async function responseError(response: Response): Promise<SessionApiError> {
   let payload: unknown
   try {
@@ -36,6 +58,8 @@ async function responseError(response: Response): Promise<SessionApiError> {
   let message = 'The management request failed.'
   if (isRecord(payload) && typeof payload.detail === 'string') {
     message = payload.detail
+  } else {
+    message = formatValidationMessage(payload) ?? message
   }
 
   return new SessionApiError(message, 'http', response.status)
