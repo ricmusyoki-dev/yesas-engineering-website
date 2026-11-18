@@ -9,6 +9,7 @@ export type AttachmentTarget =
   | 'company_profile_revision'
   | 'homepage_section_revision'
   | 'service_revision'
+  | 'project_revision'
 
 export interface MediaUploadMetadata {
   title?: string

@@ -3,17 +3,35 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { appRoutes } from '../app/router'
 import { Header } from '../components/Header'
-import type { CompanyProfile, HomepageContent } from '../lib/api/types'
+import type {
+  CompanyProfile,
+  HomepageContent,
+  PaginatedResponse,
+  PublicProject,
+} from '../lib/api/types'
+import { ApiError } from '../lib/api/errors'
 import { makeCompanyProfile } from './fixtures'
 
-const { getCompanyProfileMock, getHomepageContentMock } = vi.hoisted(() => ({
+const {
+  getCompanyProfileMock,
+  getHomepageContentMock,
+  getProjectMock,
+  listProjectsMock,
+} = vi.hoisted(() => ({
   getCompanyProfileMock: vi.fn<() => Promise<CompanyProfile>>(),
   getHomepageContentMock: vi.fn<() => Promise<HomepageContent>>(),
+  getProjectMock: vi.fn(),
+  listProjectsMock: vi.fn(),
 }))
 
 vi.mock('../features/company/api', () => ({
   getCompanyProfile: getCompanyProfileMock,
   getHomepageContent: getHomepageContentMock,
+}))
+
+vi.mock('../features/projects/api', () => ({
+  getProject: getProjectMock,
+  listProjects: listProjectsMock,
 }))
 
 function renderRoute(path: string) {
@@ -24,6 +42,13 @@ function renderRoute(path: string) {
 beforeEach(() => {
   getCompanyProfileMock.mockResolvedValue(makeCompanyProfile())
   getHomepageContentMock.mockResolvedValue({ sections: [] })
+  listProjectsMock.mockResolvedValue({
+    count: 0,
+    next: null,
+    previous: null,
+    results: [],
+  } satisfies PaginatedResponse<PublicProject>)
+  getProjectMock.mockRejectedValue(ApiError.http(404, 'Not Found'))
 })
 
 describe('public application routes', () => {

@@ -71,6 +71,13 @@ describe('private dashboard authentication flow', () => {
       .mockResolvedValueOnce(jsonResponse({ csrfToken: 'before-login' }))
       .mockResolvedValueOnce(jsonResponse(owner))
       .mockResolvedValueOnce(jsonResponse({ csrfToken: 'after-login' }))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(
+        jsonResponse({ count: 0, next: null, previous: null, results: [] }),
+      )
 
     renderAt('/dashboard/projects')
 
@@ -82,9 +89,9 @@ describe('private dashboard authentication flow', () => {
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'Projects' }),
+      await screen.findByRole('heading', { name: 'Projects Management' }),
     ).toBeInTheDocument()
-    expect(screen.getByText('This area is not available yet.')).toBeInTheDocument()
+    expect(await screen.findByText('No projects yet')).toBeInTheDocument()
   })
 
   it('does not expose dashboard content while session restoration is pending', async () => {
