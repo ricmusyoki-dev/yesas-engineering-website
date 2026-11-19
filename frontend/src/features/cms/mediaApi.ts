@@ -5,6 +5,23 @@ import type {
   MediaAttachment,
 } from './types'
 
+export interface PaginatedMediaAssets {
+  count: number
+  next: string | null
+  previous: string | null
+  results: MediaAsset[]
+}
+
+export interface MediaAssetFilters {
+  page?: number
+  page_size?: number
+  search?: string
+  media_type?: 'image' | 'video'
+  lifecycle?: 'active' | 'archived'
+  uploaded_by?: number
+  ordering?: 'created_at' | '-created_at' | 'title' | '-title' | 'file_size' | '-file_size'
+}
+
 export type AttachmentTarget =
   | 'company_profile_revision'
   | 'homepage_section_revision'
@@ -40,6 +57,45 @@ function attachmentCollectionPath(
   revisionId: number,
 ): string {
   return `/api/v1/media/attachments/${target}/${revisionId}/`
+}
+
+export function listAssets(
+  filters: MediaAssetFilters = {},
+): Promise<PaginatedMediaAssets> {
+  const params = new URLSearchParams()
+  for (const [key, value] of Object.entries(filters)) {
+    if (value !== undefined && value !== '') {
+      params.set(key, String(value))
+    }
+  }
+  const query = params.toString()
+  return managementRequest(`/api/v1/media/assets/${query ? `?${query}` : ''}`)
+}
+
+export function getAsset(assetId: string): Promise<MediaAsset> {
+  return managementRequest(`/api/v1/media/assets/${assetId}/`)
+}
+
+export function updateAsset(
+  assetId: string,
+  changes: Partial<MediaUploadMetadata & { display_filename: string }>,
+): Promise<MediaAsset> {
+  return managementRequest(`/api/v1/media/assets/${assetId}/`, {
+    method: 'PATCH',
+    body: changes,
+  })
+}
+
+export function archiveAsset(assetId: string): Promise<MediaAsset> {
+  return managementRequest(`/api/v1/media/assets/${assetId}/archive/`, {
+    method: 'POST',
+  })
+}
+
+export function restoreAsset(assetId: string): Promise<MediaAsset> {
+  return managementRequest(`/api/v1/media/assets/${assetId}/restore/`, {
+    method: 'POST',
+  })
 }
 
 export function listAttachments(

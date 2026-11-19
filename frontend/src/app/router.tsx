@@ -1,7 +1,6 @@
 import { createBrowserRouter, type RouteObject } from 'react-router-dom'
 import { DashboardLayout } from '../features/dashboard/DashboardLayout'
 import {
-  DashboardModulePage,
   DashboardOverview,
   NotAuthorizedPage,
 } from '../features/dashboard/DashboardPages'
@@ -10,6 +9,7 @@ import {
   LoginRoute,
   ManagementRoleRoute,
 } from '../features/auth/ProtectedRoutes'
+import { MediaLibraryPage } from '../features/cms/MediaLibraryPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { CompanyProfilePage } from '../features/company/CompanyProfilePage'
 import { HomepagePage } from '../features/homepage/HomepagePage'
@@ -62,7 +62,7 @@ export const appRoutes: RouteObject[] = [
               },
               {
                 path: 'media',
-                element: <DashboardModulePage title="Media Library" />,
+                element: <MediaLibraryPage />,
               },
             ],
           },

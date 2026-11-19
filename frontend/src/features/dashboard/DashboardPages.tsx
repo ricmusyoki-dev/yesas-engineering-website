@@ -31,7 +31,7 @@ const modules = [
     to: '/dashboard/media',
     title: 'Media Library',
     description: 'Upload and organise images and video.',
-    available: false,
+    available: true,
   },
 ]
 
@@ -66,7 +66,7 @@ export function DashboardOverview() {
             Website areas
           </h2>
           <p className="text-sm text-slate-500">
-            Company, homepage, services, and projects editing are available.
+            Company, homepage, services, projects, and media management are available.
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

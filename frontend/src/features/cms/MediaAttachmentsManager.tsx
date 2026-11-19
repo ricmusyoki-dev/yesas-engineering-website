@@ -3,6 +3,7 @@ import { SessionApiError } from '../auth/api'
 import {
   createAttachment,
   detachAttachment,
+  listAssets,
   updateAttachment,
   uploadAsset,
   type AttachmentTarget,
@@ -84,6 +85,68 @@ export function MediaAttachmentsManager({
   const [busy, setBusy] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [libraryAssets, setLibraryAssets] = useState<MediaAsset[]>([])
+  const [libraryLoading, setLibraryLoading] = useState(false)
+  const [librarySearch, setLibrarySearch] = useState('')
+  const [libraryError, setLibraryError] = useState('')
+
+  function eligibleAssets(asset: MediaAsset): boolean {
+    const wantsVideo = role === 'video' || role.endsWith('_video')
+    return (
+      asset.lifecycle === 'active' &&
+      (wantsVideo ? asset.media_type === 'video' : asset.media_type === 'image')
+    )
+  }
+
+  async function openPicker() {
+    setPickerOpen(true)
+    setLibraryError('')
+    setLibraryLoading(true)
+    try {
+      const response = await listAssets({
+        page: 1,
+        page_size: 100,
+        search: librarySearch || undefined,
+        lifecycle: 'active',
+      })
+      setLibraryAssets(response.results)
+    } catch (requestError) {
+      setLibraryError(messageFor(requestError))
+    } finally {
+      setLibraryLoading(false)
+    }
+  }
+
+  async function searchLibrary(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    await openPicker()
+  }
+
+  async function attachExistingAsset(asset: MediaAsset) {
+    setBusy(true)
+    setError('')
+    setLibraryError('')
+    const payload: CreateAttachmentPayload = {
+      asset: asset.id,
+      role,
+      display_order:
+        attachments.reduce(
+          (maximum, attachment) =>
+            Math.max(maximum, attachment.display_order),
+          -1,
+        ) + 1,
+    }
+    try {
+      const attachment = await createAttachment(target, revisionId, payload)
+      onAttachmentsChange([...attachments, attachment])
+      setPickerOpen(false)
+    } catch (requestError) {
+      setError(messageFor(requestError))
+    } finally {
+      setBusy(false)
+    }
+  }
 
   function replaceAttachment(updated: MediaAttachment) {
     onAttachmentsChange(
@@ -332,6 +395,127 @@ export function MediaAttachmentsManager({
             </button>
           </div>
         </form>
+      )}
+
+      {editable && (
+        <div className="mt-4">
+          <button
+            className="rounded-lg border border-brand-blue px-4 py-2.5 text-sm font-semibold text-brand-blue hover:bg-brand-blue/5 disabled:opacity-60"
+            disabled={busy}
+            onClick={() => void openPicker()}
+            type="button"
+          >
+            Browse existing media
+          </button>
+        </div>
+      )}
+
+      {pickerOpen && (
+        <div
+          aria-labelledby="media-picker-title"
+          aria-modal="true"
+          className="fixed inset-0 z-40 grid place-items-center bg-slate-950/50 p-4"
+          role="dialog"
+        >
+          <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-7">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2
+                  className="text-xl font-bold text-brand-navy"
+                  id="media-picker-title"
+                >
+                  Choose existing media
+                </h2>
+                <p className="mt-1 text-sm text-slate-600">
+                  Eligible assets for the selected {role.replaceAll('_', ' ')} role.
+                </p>
+              </div>
+              <button
+                className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold"
+                onClick={() => setPickerOpen(false)}
+                type="button"
+              >
+                Close
+              </button>
+            </div>
+
+            <form
+              className="mt-5 flex gap-3"
+              onSubmit={(event) => void searchLibrary(event)}
+            >
+              <label className="sr-only" htmlFor="media-picker-search">
+                Search media
+              </label>
+              <input
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 p-2.5 text-sm"
+                id="media-picker-search"
+                onChange={(event) => setLibrarySearch(event.target.value)}
+                placeholder="Search title or filename"
+                value={librarySearch}
+              />
+              <button
+                className="rounded-lg border border-slate-300 px-4 text-sm font-semibold"
+                type="submit"
+              >
+                Search
+              </button>
+            </form>
+
+            {libraryError && (
+              <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800" role="alert">
+                {libraryError}
+              </p>
+            )}
+            {libraryLoading ? (
+              <p className="mt-6 text-sm text-slate-600" role="status">
+                Loading media…
+              </p>
+            ) : (
+              <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {libraryAssets.filter(eligibleAssets).map((asset) => (
+                  <li
+                    className="overflow-hidden rounded-xl border border-slate-200"
+                    key={asset.id}
+                  >
+                    {asset.media_type === 'image' ? (
+                      <img
+                        alt={asset.alt_text || asset.title || asset.display_filename}
+                        className="aspect-video w-full bg-slate-100 object-cover"
+                        src={assetPreviewUrl(asset)}
+                      />
+                    ) : (
+                      <video
+                        aria-label={asset.title || asset.display_filename}
+                        className="aspect-video w-full bg-slate-950 object-cover"
+                        controls
+                        preload="metadata"
+                        src={asset.content_url}
+                      />
+                    )}
+                    <div className="p-4">
+                      <p className="truncate text-sm font-semibold text-brand-navy">
+                        {asset.title || asset.display_filename}
+                      </p>
+                      <button
+                        className="mt-3 rounded-lg bg-brand-navy px-3 py-2 text-sm font-semibold text-white hover:bg-brand-blue disabled:opacity-60"
+                        disabled={busy}
+                        onClick={() => void attachExistingAsset(asset)}
+                        type="button"
+                      >
+                        Attach this media
+                      </button>
+                    </div>
+                  </li>
+                ))}
+                {libraryAssets.filter(eligibleAssets).length === 0 && (
+                  <li className="rounded-lg border border-dashed border-slate-300 p-6 text-sm text-slate-600 sm:col-span-2 lg:col-span-3">
+                    No eligible active media is available for this role.
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
+        </div>
       )}
 
       {pendingAsset && (
