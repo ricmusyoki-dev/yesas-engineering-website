@@ -1,6 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { SessionApiError } from '../auth/api'
+import { listAssets } from '../cms/mediaApi'
+import { listHomepageSections } from '../homepage/managementApi'
+import { listProjects } from '../projects/managementApi'
+import { listServices } from '../services/managementApi'
 
 const modules = [
   {
@@ -37,6 +42,58 @@ const modules = [
 
 export function DashboardOverview() {
   const { state } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [stats, setStats] = useState({
+    publishedServices: 0,
+    publishedProjects: 0,
+    draftUpdates: 0,
+    activeMedia: 0,
+  })
+
+  useEffect(() => {
+    async function loadSummary() {
+      try {
+        const [services, projects, homepageSections, media] =
+          await Promise.all([
+            listServices(),
+            listProjects(),
+            listHomepageSections(),
+            listAssets({ page: 1, page_size: 1, lifecycle: 'active' }),
+          ])
+
+        setStats({
+          publishedServices: services.filter(
+            (service) => !service.is_archived && service.published,
+          ).length,
+          publishedProjects: projects.filter(
+            (project) =>
+              project.availability === 'enabled' && project.published,
+          ).length,
+          draftUpdates:
+            services.filter((service) => service.draft).length +
+            projects.filter((project) => project.draft).length +
+            homepageSections.filter((section) => section.status === 'draft')
+              .length,
+          activeMedia: media.count,
+        })
+        setLoadError('')
+      } catch (error) {
+        setLoadError(
+          error instanceof SessionApiError
+            ? error.message
+            : 'Dashboard information could not be loaded.',
+        )
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (state.status === 'authenticated') {
+      void loadSummary()
+    }
+  }, [state.status])
+
   if (state.status !== 'authenticated') {
     return null
   }
@@ -59,6 +116,40 @@ export function DashboardOverview() {
           website. Choose an area to continue.
         </p>
       </div>
+
+      <section aria-labelledby="summary-heading" className="mt-8">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold" id="summary-heading">
+            Website summary
+          </h2>
+        </div>
+        {loadError ? (
+          <p className="rounded-lg bg-red-50 p-4 text-sm text-red-800" role="alert">
+            {loadError}
+          </p>
+        ) : loading ? (
+          <p className="text-sm text-slate-600" role="status">
+            Loading website summary…
+          </p>
+        ) : (
+          <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {[
+              ['Published services', stats.publishedServices],
+              ['Published projects', stats.publishedProjects],
+              ['Draft updates', stats.draftUpdates],
+              ['Active media assets', stats.activeMedia],
+            ].map(([label, value]) => (
+              <div
+                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                key={String(label)}
+              >
+                <dt className="text-sm font-medium text-slate-600">{label}</dt>
+                <dd className="mt-2 text-3xl font-bold text-brand-navy">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
 
       <section aria-labelledby="workspace-heading" className="mt-8">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">

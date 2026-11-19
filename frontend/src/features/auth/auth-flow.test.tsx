@@ -205,10 +205,23 @@ describe('private dashboard authentication flow', () => {
 
   it('logs out with CSRF, clears auth state, and returns to login', async () => {
     const user = userEvent.setup()
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse(owner))
-      .mockResolvedValueOnce(jsonResponse({ csrfToken: 'logout-csrf' }))
-      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    fetchMock.mockImplementation(async (input, init) => {
+      const path = String(input)
+      if (path === '/api/v1/auth/me/') return jsonResponse(owner)
+      if (path === '/api/v1/auth/csrf/') {
+        return jsonResponse({ csrfToken: 'logout-csrf' })
+      }
+      if (path === '/api/v1/auth/logout/' && init?.method === 'POST') {
+        return new Response(null, { status: 204 })
+      }
+      if (path === '/api/v1/manage/services/') return jsonResponse([])
+      if (path === '/api/v1/manage/projects/') return jsonResponse([])
+      if (path === '/api/v1/manage/homepage/sections/') return jsonResponse([])
+      if (path.startsWith('/api/v1/media/assets/')) {
+        return jsonResponse({ count: 0, next: null, previous: null, results: [] })
+      }
+      throw new Error(`Unexpected request: ${path}`)
+    })
 
     renderAt('/dashboard')
     await screen.findByRole('heading', { name: 'Welcome, Site Owner' })

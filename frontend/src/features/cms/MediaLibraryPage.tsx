@@ -60,8 +60,6 @@ export function MediaLibraryPage() {
   })
 
   async function loadAssets() {
-    setLoading(true)
-    setError('')
     try {
       const response = await listAssets({
         page,
@@ -80,11 +78,39 @@ export function MediaLibraryPage() {
   }
 
   useEffect(() => {
-    void loadAssets()
-  }, [page, mediaType, lifecycle])
+    let cancelled = false
+
+    async function loadFilteredAssets() {
+      try {
+        const response = await listAssets({
+          page,
+          page_size: PAGE_SIZE,
+          search: search || undefined,
+          media_type: mediaType || undefined,
+          lifecycle: lifecycle || undefined,
+        })
+        if (!cancelled) {
+          setAssets(response.results)
+          setCount(response.count)
+          setLoading(false)
+        }
+      } catch (requestError) {
+        if (!cancelled) {
+          setError(errorMessage(requestError))
+          setLoading(false)
+        }
+      }
+    }
+
+    void loadFilteredAssets()
+    return () => {
+      cancelled = true
+    }
+  }, [lifecycle, mediaType, page, search])
 
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setLoading(true)
     setPage(1)
     await loadAssets()
   }
@@ -256,7 +282,7 @@ export function MediaLibraryPage() {
           </label>
           <label className="text-sm font-medium text-slate-700">
             Media type
-            <select className="mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm" onChange={(event) => { setPage(1); setMediaType(event.target.value as MediaType | '') }} value={mediaType}>
+            <select className="mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm" onChange={(event) => { setLoading(true); setPage(1); setMediaType(event.target.value as MediaType | '') }} value={mediaType}>
               <option value="">All</option>
               <option value="image">Images</option>
               <option value="video">Videos</option>
@@ -264,7 +290,7 @@ export function MediaLibraryPage() {
           </label>
           <label className="text-sm font-medium text-slate-700">
             Status
-            <select className="mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm" onChange={(event) => { setPage(1); setLifecycle(event.target.value as MediaLifecycle | '') }} value={lifecycle}>
+            <select className="mt-1 block w-full rounded-lg border border-slate-300 p-2 text-sm" onChange={(event) => { setLoading(true); setPage(1); setLifecycle(event.target.value as MediaLifecycle | '') }} value={lifecycle}>
               <option value="">All</option>
               <option value="active">Active</option>
               <option value="archived">Archived</option>
@@ -319,8 +345,8 @@ export function MediaLibraryPage() {
         <div className="mt-6 flex items-center justify-between gap-3">
           <p className="text-sm text-slate-600">{count} asset{count === 1 ? '' : 's'} · Page {page} of {pageCount}</p>
           <div className="flex gap-2">
-            <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-50" disabled={page === 1} onClick={() => setPage((current) => current - 1)} type="button">Previous</button>
-            <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-50" disabled={page >= pageCount} onClick={() => setPage((current) => current + 1)} type="button">Next</button>
+            <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-50" disabled={page === 1} onClick={() => { setLoading(true); setPage((current) => current - 1) }} type="button">Previous</button>
+            <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold disabled:opacity-50" disabled={page >= pageCount} onClick={() => { setLoading(true); setPage((current) => current + 1) }} type="button">Next</button>
           </div>
         </div>
       )}
