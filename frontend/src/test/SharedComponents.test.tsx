@@ -52,4 +52,24 @@ describe('shared accessible components', () => {
 
     expect(screen.getByRole('status')).toHaveTextContent('Media unavailable.')
   })
+
+  it('crops card media within its consistent aspect ratio', () => {
+    render(<Media media={image} presentation="card" />)
+
+    expect(screen.getByRole('img', { name: 'Published image' })).toHaveClass(
+      'object-cover',
+    )
+    expect(screen.getByRole('figure')).toHaveClass('public-media-card')
+  })
+
+  it('keeps gallery media fully visible within a consistent frame', () => {
+    render(<Media media={image} presentation="gallery" />)
+
+    expect(screen.getByRole('img', { name: 'Published image' })).toHaveClass(
+      'object-contain',
+    )
+    expect(
+      screen.getByRole('img', { name: 'Published image' }).parentElement,
+    ).toHaveClass('public-media-gallery')
+  })
 })

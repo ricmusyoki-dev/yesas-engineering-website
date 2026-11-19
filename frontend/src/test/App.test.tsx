@@ -8,20 +8,25 @@ import type {
   HomepageContent,
   PaginatedResponse,
   PublicProject,
+  PublicService,
 } from '../lib/api/types'
 import { ApiError } from '../lib/api/errors'
-import { makeCompanyProfile } from './fixtures'
+import { makeCompanyProfile, makeService } from './fixtures'
 
 const {
   getCompanyProfileMock,
   getHomepageContentMock,
   getProjectMock,
   listProjectsMock,
+  getServiceMock,
+  listServicesMock,
 } = vi.hoisted(() => ({
   getCompanyProfileMock: vi.fn<() => Promise<CompanyProfile>>(),
   getHomepageContentMock: vi.fn<() => Promise<HomepageContent>>(),
   getProjectMock: vi.fn(),
   listProjectsMock: vi.fn(),
+  getServiceMock: vi.fn(),
+  listServicesMock: vi.fn(),
 }))
 
 vi.mock('../features/company/api', () => ({
@@ -32,6 +37,11 @@ vi.mock('../features/company/api', () => ({
 vi.mock('../features/projects/api', () => ({
   getProject: getProjectMock,
   listProjects: listProjectsMock,
+}))
+
+vi.mock('../features/services/api', () => ({
+  getService: getServiceMock,
+  listServices: listServicesMock,
 }))
 
 function renderRoute(path: string) {
@@ -49,6 +59,8 @@ beforeEach(() => {
     results: [],
   } satisfies PaginatedResponse<PublicProject>)
   getProjectMock.mockRejectedValue(ApiError.http(404, 'Not Found'))
+  getServiceMock.mockRejectedValue(ApiError.http(404, 'Not Found'))
+  listServicesMock.mockResolvedValue([] satisfies PublicService[])
 })
 
 describe('public application routes', () => {
@@ -80,17 +92,20 @@ describe('public application routes', () => {
 
     fireEvent.click(screen.getByRole('link', { name: 'Services' }))
     await screen.findByText(
-      'Published services are not connected in this foundation milestone.',
+      'There are no published services available at this time.',
     )
     await waitFor(() => {
-      expect(document.title).toBe('Yesas Engineering')
+      expect(document.title).toBe('Services | Yesas Engineering')
     })
   })
 
-  it('renders the services route', () => {
+  it('renders the services route', async () => {
     renderRoute('/services')
 
     expect(screen.getByRole('heading', { name: 'Services' })).toBeInTheDocument()
+    expect(
+      await screen.findByText('There are no published services available at this time.'),
+    ).toBeInTheDocument()
   })
 
   it('renders the projects route', () => {
@@ -100,12 +115,20 @@ describe('public application routes', () => {
   })
 
   it.each([
-    ['/services/example-service', 'Service details'],
     ['/projects/example-project', 'Project details'],
   ])('matches detail route %s', (path, heading) => {
     renderRoute(path)
 
     expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()
+  })
+
+  it('renders a published service detail route', async () => {
+    getServiceMock.mockResolvedValue(makeService({ title: 'Published service' }))
+    renderRoute('/services/example-service')
+
+    expect(
+      await screen.findByRole('heading', { name: 'Published service' }),
+    ).toBeInTheDocument()
   })
 
   it('renders the contact route without a submission form', () => {

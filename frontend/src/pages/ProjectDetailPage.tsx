@@ -172,7 +172,7 @@ export function ProjectDetailPage() {
               </header>
 
               {project.cover_image && (
-                <Media media={project.cover_image} priority />
+                <Media media={project.cover_image} presentation="gallery" priority />
               )}
               <ProjectSection title="Project overview" content={project.description} />
               <ProjectSection
@@ -208,7 +208,7 @@ export function ProjectDetailPage() {
                   <ul className="mt-4 grid gap-4 sm:grid-cols-2">
                     {project.images.map((image) => (
                       <li key={image.id}>
-                        <Media media={image} />
+                        <Media media={image} presentation="gallery" />
                       </li>
                     ))}
                   </ul>

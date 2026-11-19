@@ -2,158 +2,11 @@ import { ErrorState } from '../components/ErrorState'
 import { LoadingState } from '../components/LoadingState'
 import { Media } from '../components/Media'
 import { NotFoundState } from '../components/NotFoundState'
+import { CompanyContactDetails } from '../components/CompanyContactDetails'
 import { getCompanyProfile } from '../features/company/api'
 import { usePageMetadata } from '../hooks/usePageMetadata'
 import { usePublicContent } from '../hooks/usePublicContent'
 import type { CompanyProfile, PublicMedia } from '../lib/api/types'
-
-interface ContactLink {
-  href: string
-  label: string
-}
-
-function telephoneHref(value: string): string | null {
-  const digits = value.replace(/\D/g, '')
-  if (!/^\d{7,15}$/.test(digits)) {
-    return null
-  }
-  return `tel:${value.trim().startsWith('+') ? '+' : ''}${digits}`
-}
-
-function whatsappHref(value: string): string | null {
-  const digits = value.replace(/\D/g, '')
-  return /^\d{7,15}$/.test(digits) ? `https://wa.me/${digits}` : null
-}
-
-function emailHref(value: string): string | null {
-  const email = value.trim()
-  return /^[^\s@]+@[^\s@]+$/.test(email)
-    ? `mailto:${email}`
-    : null
-}
-
-function safeSocialHref(value: string): string | null {
-  try {
-    const url = new URL(value)
-    return url.protocol === 'https:' && !url.username && !url.password
-      ? url.toString()
-      : null
-  } catch {
-    return null
-  }
-}
-
-function ContactDetails({ profile }: { profile: CompanyProfile }) {
-  const contactLinks: ContactLink[] = []
-  const phone = profile.business_phone.trim()
-  const phoneLink = telephoneHref(phone)
-  const emailLink = emailHref(profile.business_email)
-  const whatsappLink = whatsappHref(profile.whatsapp_number)
-
-  if (phone && phoneLink) {
-    contactLinks.push({ href: phoneLink, label: phone })
-  }
-  if (profile.business_email.trim() && emailLink) {
-    contactLinks.push({
-      href: emailLink,
-      label: profile.business_email.trim(),
-    })
-  }
-  if (profile.whatsapp_number.trim() && whatsappLink) {
-    contactLinks.push({
-      href: whatsappLink,
-      label: `WhatsApp: ${profile.whatsapp_number.trim()}`,
-    })
-  }
-
-  const socialLinks = [
-    { label: 'LinkedIn', value: profile.linkedin_url },
-    { label: 'Instagram', value: profile.instagram_url },
-    { label: 'Facebook', value: profile.facebook_url },
-    { label: 'TikTok', value: profile.tiktok_url },
-    { label: 'YouTube', value: profile.youtube_url },
-  ]
-    .map(({ label, value }) => ({
-      label,
-      href: value.trim() ? safeSocialHref(value.trim()) : null,
-    }))
-    .filter(
-      (item): item is { label: string; href: string } => item.href !== null,
-    )
-
-  const address = [
-    profile.physical_address.trim(),
-    profile.city.trim(),
-    profile.country.trim(),
-  ].filter(Boolean)
-
-  if (!contactLinks.length && !socialLinks.length && !address.length) {
-    return null
-  }
-
-  return (
-    <section
-      className="bg-slate-50 py-14 sm:py-18"
-      aria-labelledby="about-contact-heading"
-    >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <h2
-          id="about-contact-heading"
-          className="text-2xl font-bold text-brand-navy"
-        >
-          Contact information
-        </h2>
-        <div className="mt-6 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {address.length > 0 && (
-            <address className="not-italic leading-7 text-slate-700">
-              {address.map((part) => (
-                <p key={part}>{part}</p>
-              ))}
-            </address>
-          )}
-          {contactLinks.length > 0 && (
-            <ul className="space-y-3">
-              {contactLinks.map(({ href, label }) => (
-                <li key={href}>
-                  <a
-                    className="font-medium text-brand-blue underline decoration-brand-orange underline-offset-4 hover:text-brand-orange focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange"
-                    href={href}
-                    target={href.startsWith('https://wa.me/') ? '_blank' : undefined}
-                    rel={
-                      href.startsWith('https://wa.me/')
-                        ? 'noopener noreferrer'
-                        : undefined
-                    }
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-          {socialLinks.length > 0 && (
-            <nav aria-label="Company social profiles">
-              <ul className="flex flex-wrap gap-3">
-                {socialLinks.map(({ href, label }) => (
-                  <li key={label}>
-                    <a
-                      className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-4 font-medium text-brand-navy transition-colors hover:border-brand-orange hover:text-brand-blue focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-orange"
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          )}
-        </div>
-      </div>
-    </section>
-  )
-}
 
 function CompanyImagery({ images }: { images: PublicMedia[] }) {
   if (images.length === 0) {
@@ -162,7 +15,7 @@ function CompanyImagery({ images }: { images: PublicMedia[] }) {
 
   return (
     <section
-      className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20"
+      className="public-container public-section"
       aria-labelledby="company-imagery-heading"
     >
       <h2
@@ -173,7 +26,7 @@ function CompanyImagery({ images }: { images: PublicMedia[] }) {
       </h2>
       <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {images.map((media) => (
-          <Media key={media.id} media={media} />
+          <Media key={media.id} media={media} presentation="gallery" />
         ))}
       </div>
     </section>
@@ -279,8 +132,7 @@ function AboutContent({ profile }: { profile: CompanyProfile }) {
         </section>
       )}
 
-      <ContactDetails profile={profile} />
-
+      <CompanyContactDetails profile={profile} />
     </>
   )
 }

@@ -18,15 +18,17 @@ const primaryActionClass =
 function SectionHeading({
   as: Heading = 'h2',
   tone = 'dark',
+  size = 'default',
   children,
 }: {
   as?: 'h1' | 'h2'
   tone?: 'dark' | 'light'
+  size?: 'default' | 'hero'
   children: string
 }) {
   return (
     <Heading
-      className={`text-3xl font-bold tracking-tight sm:text-4xl ${
+      className={`${size === 'hero' ? 'text-4xl sm:text-5xl lg:text-6xl' : 'text-3xl sm:text-4xl'} font-bold tracking-tight ${
         tone === 'light' ? 'text-white' : 'text-brand-navy'
       }`}
     >
@@ -44,8 +46,8 @@ function SectionCopy({
 }) {
   return text.trim() ? (
     <p
-      className={`mt-4 whitespace-pre-line text-base leading-8 sm:text-lg ${
-        tone === 'light' ? 'text-white/85' : 'text-slate-700'
+      className={`public-copy mt-4 whitespace-pre-line ${
+        tone === 'light' ? 'public-copy-light' : ''
       }`}
     >
       {text}
@@ -100,13 +102,13 @@ function HeroSection({
             aria-hidden="true"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-navy via-brand-navy/90 to-brand-navy/40" />
+        <div className="hero-overlay absolute inset-0" />
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
         <div className="max-w-3xl">
           {section.heading.trim() ? (
-            <SectionHeading as={headingLevel} tone="light">
+            <SectionHeading as={headingLevel} tone="light" size="hero">
               {section.heading}
             </SectionHeading>
           ) : headingLevel === 'h1' ? (
@@ -175,13 +177,13 @@ function IntroductionSection({
 
 function ServiceCard({ service }: { service: PublicService }) {
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-shadow hover:shadow-lg">
+    <article className="public-card group flex h-full flex-col">
       {service.cover_image && (
         <CmsLink
           className="block overflow-hidden"
           destination={`/services/${encodeURIComponent(service.slug)}`}
         >
-          <Media media={service.cover_image} />
+          <Media media={service.cover_image} presentation="card" />
         </CmsLink>
       )}
       <div className="flex flex-1 flex-col p-6">
@@ -267,10 +269,10 @@ function ProjectCard({ project }: { project: PublicProject }) {
     .join(', ')
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-shadow hover:shadow-lg">
+    <article className="public-card group flex h-full flex-col">
       {project.cover_image && (
         <CmsLink className="block overflow-hidden" destination={projectPath}>
-          <Media media={project.cover_image} />
+          <Media media={project.cover_image} presentation="card" />
         </CmsLink>
       )}
       <div className="flex flex-1 flex-col p-6">

@@ -4,10 +4,12 @@ import { PageFrame } from './PageFrame'
 export function PrivacyPolicyPage() {
   return (
     <PageFrame title="Privacy policy">
-      <EmptyState
-        title="Content unavailable"
-        message="Privacy policy content has not been supplied. This page will remain unavailable until approved legal content is provided."
-      />
+      <div className="max-w-prose">
+        <EmptyState
+          title="Content unavailable"
+          message="Privacy policy content has not been supplied. This page will remain unavailable until approved legal content is provided."
+        />
+      </div>
     </PageFrame>
   )
 }

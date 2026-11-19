@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CompanyProfile, HomepageContent } from '../lib/api/types'
@@ -173,6 +173,30 @@ describe('homepage CMS content', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
   })
 
+  it('keeps hero content usable when its image fails and no CTA is configured', async () => {
+    getHomepageContentMock.mockResolvedValue({
+      sections: [
+        makeHomepageSection({
+          section_type: 'HERO',
+          heading: 'Published resilient hero',
+          body: 'Published supporting text.',
+          hero_image: makeMedia({ id: 'unavailable-hero-image' }),
+        }),
+      ],
+    })
+
+    renderPage(<HomePage />)
+
+    expect(
+      await screen.findByRole('heading', { name: 'Published resilient hero' }),
+    ).toBeInTheDocument()
+    fireEvent.error(screen.getByRole('img', { name: 'Test media alt text' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Media unavailable.')
+    expect(screen.getByText('Published supporting text.')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /contact|learn more/i }))
+      .not.toBeInTheDocument()
+  })
+
   it('renders an empty state instead of sample content when there are no sections', async () => {
     getHomepageContentMock.mockResolvedValue({ sections: [] })
     renderPage(<HomePage />)
@@ -293,9 +317,11 @@ describe('About page company profile', () => {
     expect(
       screen.getByRole('link', { name: 'LinkedIn' }),
     ).toHaveAttribute('href', 'https://www.linkedin.com/company/example')
-    expect(document.title).toBe(
-      'Published Engineering Company | About | Yesas Engineering',
-    )
+    await waitFor(() => {
+      expect(document.title).toBe(
+        'Published Engineering Company | About | Yesas Engineering',
+      )
+    })
     expect(
       document
         .querySelector('meta[name="description"]')

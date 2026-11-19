@@ -146,7 +146,7 @@ export function ProjectsPage() {
         <label className="text-sm font-semibold text-slate-700">
           Category
           <select
-            className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-normal"
+            className="public-control mt-1 block w-full font-normal"
             onChange={(event) => updateFilter('category', event.target.value)}
             value={category}
           >
@@ -165,7 +165,7 @@ export function ProjectsPage() {
         <label className="text-sm font-semibold text-slate-700">
           Tag
           <select
-            className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-normal"
+            className="public-control mt-1 block w-full font-normal"
             onChange={(event) => updateFilter('tag', event.target.value)}
             value={tag}
           >
@@ -183,7 +183,7 @@ export function ProjectsPage() {
         <label className="text-sm font-semibold text-slate-700">
           Featured
           <select
-            className="mt-1 block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-normal"
+            className="public-control mt-1 block w-full font-normal"
             onChange={(event) => updateFilter('featured', event.target.value)}
             value={featured}
           >
@@ -233,16 +233,16 @@ export function ProjectsPage() {
               )
               return (
                 <li
-                  className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                  className="public-card group"
                   key={project.slug}
                 >
                   {project.cover_image && (
                     <Link
                       aria-label={`View ${project.title}`}
-                      className="block"
+                      className="block overflow-hidden"
                       to={`/projects/${encodeURIComponent(project.slug)}`}
                     >
-                      <Media media={project.cover_image} />
+                      <Media media={project.cover_image} presentation="card" />
                     </Link>
                   )}
                   <div className="p-5">

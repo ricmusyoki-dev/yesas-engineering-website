@@ -1,8 +1,9 @@
 export function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-7xl px-5 py-6 text-sm text-slate-600 sm:px-8">
-        <p>Yesas Engineering</p>
+    <footer className="border-t border-slate-200 bg-brand-navy text-white">
+      <div className="public-container flex flex-col gap-2 py-7 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-semibold">Yesas Engineering</p>
+        <p className="text-white/75">Expertise Wired to Perfection.</p>
       </div>
     </footer>
   )
